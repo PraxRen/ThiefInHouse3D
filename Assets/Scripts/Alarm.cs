@@ -2,51 +2,57 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(AudioSource))]
 public class Alarm : MonoBehaviour
 {
     [SerializeField] private float _stepVolume;
 
-    private const float MaxVolume = 1.0f;
+    private const float MaxVolume = 0.3f;
     private const float MinVolume = 0.1f;
     private AudioSource _audioSourse;
-    private bool isReversVolume;
-    private bool _isOn;
-    public bool IsOn => _isOn;
+    private bool _isReversVolume;
+    private Coroutine _changeVolumeJob;
 
     private void Start()
     {
         _audioSourse = GetComponent<AudioSource>();
     }
 
-    public void Update()
+    private IEnumerator ChangeVolume()
     {
-        if (_isOn == false)
-            return;
+        while (true)
+        {
+            if (_audioSourse.volume == MaxVolume)
+                _isReversVolume = true;
+            else if (_audioSourse.volume == MinVolume)
+                _isReversVolume = false;
 
-        if (_audioSourse.volume == MaxVolume)
-            isReversVolume = true;
-        else if (_audioSourse.volume == MinVolume)
-            isReversVolume = false;
+            if (_isReversVolume == false)
+                _audioSourse.volume = Mathf.MoveTowards(_audioSourse.volume, MaxVolume, _stepVolume * Time.deltaTime);
+            else
+                _audioSourse.volume = Mathf.MoveTowards(_audioSourse.volume, MinVolume, _stepVolume * Time.deltaTime);
 
-        if (isReversVolume == false)
-            _audioSourse.volume = Mathf.MoveTowards(_audioSourse.volume, MaxVolume, _stepVolume * Time.deltaTime);
-        else
-            _audioSourse.volume = Mathf.MoveTowards(_audioSourse.volume, MinVolume, _stepVolume * Time.deltaTime);
+            yield return null;
+        }
     }
 
     public void TurnOn()
     {
-        if (_isOn == true)
+        if (_changeVolumeJob != null)
             return;
 
-        _isOn = true;
         _audioSourse.volume = MinVolume;
         _audioSourse.Play();
+        _changeVolumeJob = StartCoroutine(ChangeVolume());
     }
 
     public void TurnOff()
     {
-        _isOn = false;
+        if (_changeVolumeJob is null)
+            return;
+
         _audioSourse.Stop();
+        StopCoroutine(_changeVolumeJob);
+        _changeVolumeJob = null;
     }
 }

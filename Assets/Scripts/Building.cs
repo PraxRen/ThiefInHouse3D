@@ -6,7 +6,7 @@ public class Building : MonoBehaviour
 {
     private void OnTriggerExit(Collider collider)
     {
-        if (collider.GetComponent<Thief>() == true)
+        if (collider.TryGetComponent<Thief>(out Thief thief) == true)
         {
             var alarm = gameObject.GetComponentInChildren<Alarm>();
             alarm.TurnOff();
