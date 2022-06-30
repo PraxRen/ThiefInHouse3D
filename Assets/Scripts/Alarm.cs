@@ -10,7 +10,6 @@ public class Alarm : MonoBehaviour
     private const float MaxVolume = 0.3f;
     private const float MinVolume = 0.1f;
     private AudioSource _audioSourse;
-    private bool _isReversVolume;
     private Coroutine _changeVolumeJob;
 
     private void Start()
@@ -20,18 +19,16 @@ public class Alarm : MonoBehaviour
 
     private IEnumerator ChangeVolume()
     {
+        float targetVolume = 0.0f;
+
         while (true)
         {
             if (_audioSourse.volume == MaxVolume)
-                _isReversVolume = true;
+                targetVolume = MinVolume;
             else if (_audioSourse.volume == MinVolume)
-                _isReversVolume = false;
+                targetVolume = MaxVolume;
 
-            if (_isReversVolume == false)
-                _audioSourse.volume = Mathf.MoveTowards(_audioSourse.volume, MaxVolume, _stepVolume * Time.deltaTime);
-            else
-                _audioSourse.volume = Mathf.MoveTowards(_audioSourse.volume, MinVolume, _stepVolume * Time.deltaTime);
-
+            _audioSourse.volume = Mathf.MoveTowards(_audioSourse.volume, targetVolume, _stepVolume * Time.deltaTime);
             yield return null;
         }
     }
@@ -48,7 +45,7 @@ public class Alarm : MonoBehaviour
 
     public void TurnOff()
     {
-        if (_changeVolumeJob is null)
+        if (_changeVolumeJob == null)
             return;
 
         _audioSourse.Stop();
